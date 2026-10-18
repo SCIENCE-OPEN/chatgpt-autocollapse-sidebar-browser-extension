@@ -4,7 +4,7 @@
   let intervalId = null;
 
   function ensureCollapsedSidebar() {
-    const closeBtn = document.querySelector('button[data-testid="close-sidebar-button"]');
+    const closeBtn = document.querySelector('button[data-app-shell-sidebar-trigger="true"]');
     if (!closeBtn) {
       console.log(CONSOLE_PREFIX, "sidebar toggle not found yet");
       return;
