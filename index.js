@@ -1,36 +1,46 @@
-(function () {
 
-  const CONSOLE_PREFIX = "[ChatGPT Auto-Collapse Sidebar Browser Extension]";
-  let intervalId = null;
+(function () {
+  const PREFIX = "[ChatGPT Auto-Collapse Sidebar]";
+  const SELECTOR = 'button[data-app-shell-sidebar-trigger="true"]';
+
+  let observer = null;
 
   function ensureCollapsedSidebar() {
-    const closeBtn = document.querySelector('button[data-app-shell-sidebar-trigger="true"]');
-    if (!closeBtn) {
-      console.log(CONSOLE_PREFIX, "sidebar toggle not found yet");
+    const button = document.querySelector(SELECTOR);
+
+    if (!button) {
+      return false;
+    }
+
+    if (button.getAttribute("aria-expanded") === "true") {
+      console.log(PREFIX, "Sidebar is open; closing it.");
+      button.click();
+    }
+
+    return true;
+  }
+
+  function start() {
+    if (ensureCollapsedSidebar()) {
       return;
     }
 
-    const state = closeBtn.getAttribute("data-state");       // "open" or "closed"
-    const expanded = closeBtn.getAttribute("aria-expanded"); // "true" or "false"
+    observer = new MutationObserver(() => {
+      if (ensureCollapsedSidebar()) {
+        observer.disconnect();
+        observer = null;
+      }
+    });
 
-    console.log(CONSOLE_PREFIX, "found button", { state, expanded });
-
-    if (state === "open" || expanded === "true") {
-      console.log(CONSOLE_PREFIX, "clicking to close");
-      closeBtn.click();
-    } else {
-      console.log(CONSOLE_PREFIX, "sidebar already closed");
-      clearInterval(intervalId);
-    }
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
   }
 
-  /**
-   * Run immediately and after interval until is sidebar found and eventually closed.
-   */
-  function kickoff() {
-    ensureCollapsedSidebar();
-    intervalId = setInterval(ensureCollapsedSidebar, 500);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
   }
-
-  if (document.readyState !== "loading") kickoff();
 })();
